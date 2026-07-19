@@ -1,3 +1,5 @@
 venv/
 model.joblib
 mlruns/
+mlartifacts/
+mlflow.db
