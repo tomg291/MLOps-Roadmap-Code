@@ -4,7 +4,7 @@ import mlflow.sklearn
 import os
 
 # Set MLflow tracking URI
-mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "file:///app/mlruns"))
+#mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "file:///app/mlruns"))
 
 # Initialise app
 app = FastAPI(title="Iris Prediction API")
