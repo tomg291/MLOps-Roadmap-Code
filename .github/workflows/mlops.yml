@@ -1,14 +1,15 @@
 name: MLOps Pipeline
 
-# 1. When should this pipeline run?
+# 1. Run on pushes to main, AND on Pull Requests!
 on:
   push:
     branches: 
       - main
-      - master
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  # 2. First Job: Test the code
   test-code:
     runs-on: ubuntu-latest
     steps:
@@ -23,16 +24,29 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install pytest httpx
+          pip install pytest httpx matplotlib seaborn
 
-      - name: Train the model (Generate mlruns)
-        run: python train.py
+      # 2. Install the Iterative CML tool
+      - name: Set up CML
+        uses: iterative/setup-cml@v2
+
+      # 3. Train the model and post the PR comment
+      - name: Train model and generate CML report
+        env:
+          # GitHub automatically provides this temporary token so the bot can comment
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python train.py
+          
+          # This command tells CML to take our markdown file and drop it in the PR!
+          cml comment create metrics.md
 
       - name: Run Pytest
         run: pytest -v
 
-  # 3. Second Job: Build and push the container (only if tests pass!)
   build-and-deploy:
+    # 4. Only deploy to DockerHub if the code is actually pushed to the main branch
+    if: github.event_name == 'push'
     needs: test-code
     runs-on: ubuntu-latest
     steps:
