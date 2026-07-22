@@ -1,0 +1,53 @@
+name: MLOps Pipeline
+
+# 1. When should this pipeline run?
+on:
+  push:
+    branches: 
+      - main
+      - master
+
+jobs:
+  # 2. First Job: Test the code
+  test-code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download code from repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest httpx
+
+      - name: Train the model (Generate mlruns)
+        run: python train.py
+
+      - name: Run Pytest
+        run: pytest -v
+
+  # 3. Second Job: Build and push the container (only if tests pass!)
+  build-and-deploy:
+    needs: test-code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download code from repository
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/iris-api:latest
