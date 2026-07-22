@@ -1,13 +1,14 @@
 name: MLOps Pipeline
 
 on:
-  permissions: write-all
   push:
     branches: 
       - main
   pull_request:
     branches:
       - main
+
+permissions: write-all
 
 jobs:
   test-code:
