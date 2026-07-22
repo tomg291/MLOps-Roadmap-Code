@@ -1,7 +1,7 @@
 name: MLOps Pipeline
 
-# 1. Run on pushes to main, AND on Pull Requests!
 on:
+  permissions: write-all
   push:
     branches: 
       - main
@@ -26,14 +26,11 @@ jobs:
           pip install -r requirements.txt
           pip install pytest httpx matplotlib seaborn
 
-      # 2. Install the Iterative CML tool
       - name: Set up CML
         uses: iterative/setup-cml@v2
 
-      # 3. Train the model and post the PR comment
       - name: Train model and generate CML report
         env:
-          # GitHub automatically provides this temporary token so the bot can comment
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python train.py
@@ -45,7 +42,6 @@ jobs:
         run: pytest -v
 
   build-and-deploy:
-    # 4. Only deploy to DockerHub if the code is actually pushed to the main branch
     if: github.event_name == 'push'
     needs: test-code
     runs-on: ubuntu-latest
